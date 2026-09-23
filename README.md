@@ -95,6 +95,19 @@ npm run lint
 
 The production output is generated in `dist/`.
 
+### Windows native binding repair
+
+If Vite reports `Cannot find native binding` for `@rolldown/binding-win32-x64-msvc`, the existing `node_modules` was likely installed from a different operating system. From Windows Command Prompt, rebuild the generated dependency directory:
+
+```bat
+rmdir /s /q node_modules
+del package-lock.json
+npm install
+npm run dev
+```
+
+The project declares the Windows Rolldown bindings as optional dependencies so a fresh Windows installation receives the correct native file. Do not copy `node_modules` between WSL/Linux and Windows; install dependencies separately on each operating system.
+
 ## Backend integration
 
 The frontend communicates only with the public Spring Boot API. It does not connect directly to PostgreSQL, Supabase, Redis, or Upstash.
@@ -156,6 +169,20 @@ src/
 After login, the returned `userId`, `email`, and JWT are stored in `localStorage` under `urlzs.session`. The session is restored after a page refresh.
 
 Logout is client-side only because the backend currently has no JWT revocation or logout endpoint. When a protected request returns `401`, the frontend clears the session and returns the user to Login.
+
+## Frontend routes
+
+The app uses a lightweight browser History API router; no routing package is required.
+
+| Path | Behavior |
+|---|---|
+| `/` | Redirects to `/dashboard` when logged in, otherwise `/login` |
+| `/dashboard` | Protected dashboard; unauthenticated users are redirected to `/login` |
+| `/login` | Login page |
+| `/register` | Registration page |
+| `/home` | Public landing page |
+
+The root domain therefore opens the dashboard for an existing session and the login page for a logged-out visitor. Static hosting must rewrite application routes such as `/dashboard` and `/login` to `index.html` so direct browser refreshes continue to load the React app.
 
 ## Design approach
 
