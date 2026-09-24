@@ -4,6 +4,8 @@ import ErrorBanner from '../components/ErrorBanner'
 import Navbar from '../components/Navbar'
 import UrlForm from '../components/UrlForm'
 import UrlList from '../components/UrlList'
+import ConfirmModal from '../components/ConfirmModal'
+import Toast from '../components/Toast'
 import { createShortUrl, deleteUrl, getShortUrl, getUrl, listUrls, updateUrlStatus } from '../services/api'
 
 const PAGE_SIZE = 20
@@ -19,6 +21,8 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized }) {
   const [error, setError] = useState('')
   const [latestShortUrl, setLatestShortUrl] = useState('')
   const [hasNext, setHasNext] = useState(false)
+
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null })
 
   const handleError = useCallback((requestError, fallback = 'Something went wrong. Please try again.') => {
     if (requestError?.status === 401) {
@@ -53,8 +57,6 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized }) {
   }, [auth.token, onUnauthorized, page])
 
   useEffect(() => {
-    // The request synchronizes this screen with the backend whenever the page changes.
-    // oxlint-disable-next-line react/set-state-in-effect
     void loadUrls(page)
   }, [loadUrls, page])
 
@@ -93,11 +95,21 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized }) {
     }
   }
 
-  async function handleStatusChange(item, status) {
-    if (status === 'DISABLED' && !window.confirm('Disable this short link? It will stop redirecting for every user who references it.')) {
-      return
+  function handleStatusChange(item, status) {
+    if (status === 'DISABLED') {
+      setConfirmDialog({
+        isOpen: true,
+        title: 'Disable Link',
+        message: 'Disable this short link? It will stop redirecting for every user who references it.',
+        onConfirm: () => executeStatusChange(item, status)
+      });
+    } else {
+      executeStatusChange(item, status);
     }
+  }
 
+  async function executeStatusChange(item, status) {
+    setConfirmDialog({ isOpen: false, title: '', message: '', onConfirm: null });
     setActionId(item.id)
     setError('')
     setNotice('')
@@ -113,11 +125,17 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized }) {
     }
   }
 
-  async function handleDelete(item) {
-    if (!window.confirm('Remove this URL from your library? The public short link may still exist.')) {
-      return
-    }
+  function handleDelete(item) {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Remove URL',
+      message: 'Remove this URL from your library? The public short link may still exist.',
+      onConfirm: () => executeDelete(item)
+    });
+  }
 
+  async function executeDelete(item) {
+    setConfirmDialog({ isOpen: false, title: '', message: '', onConfirm: null });
     setActionId(item.id)
     setError('')
     setNotice('')
@@ -147,28 +165,39 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized }) {
   }
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen animated-bg">
       <Navbar email={auth.email} onHome={onHome} onLogout={onLogout} />
+
+      <Toast message={notice} onDismiss={() => setNotice('')} />
+
+      <ConfirmModal
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog({ isOpen: false, title: '', message: '', onConfirm: null })}
+      />
+
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <section className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">Your workspace</p>
-            <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] text-ink sm:text-4xl">Good to see you.</h1>
-            <p className="mt-2 text-sm leading-6 text-slate-500">Create and manage the short links connected to your account.</p>
+            <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] text-ink dark:text-white sm:text-4xl">Good to see you.</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">Create and manage the short links connected to your account.</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left shadow-sm sm:text-right">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 backdrop-blur px-4 py-3 text-center shadow-sm">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Showing page</p>
-            <p className="mt-1 text-lg font-black text-ink">{page + 1}</p>
+            <p className="mt-1 text-lg font-black text-ink dark:text-white">{page + 1}</p>
           </div>
         </section>
 
         <div className="space-y-4">
           <UrlForm onSubmit={handleCreate} submitting={creating} />
           {latestShortUrl && (
-            <div className="flex flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-900 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100 sm:flex-row sm:items-center sm:justify-between animate-[fadeIn_0.3s_ease-out]">
               <div className="min-w-0">
                 <p className="font-bold">Short link created</p>
-                <a href={latestShortUrl} target="_blank" rel="noreferrer" className="mt-1 block truncate font-semibold text-emerald-700 hover:underline" title={latestShortUrl}>{latestShortUrl}</a>
+                <a href={latestShortUrl} target="_blank" rel="noreferrer" className="mt-1 block truncate font-semibold text-emerald-700 hover:underline dark:text-emerald-300" title={latestShortUrl}>{latestShortUrl}</a>
               </div>
               <div className="flex shrink-0 gap-2">
                 <CopyButton value={latestShortUrl} />
@@ -176,7 +205,6 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized }) {
               </div>
             </div>
           )}
-          {notice && <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">{notice}</div>}
           <ErrorBanner message={error} onDismiss={() => setError('')} />
         </div>
 
@@ -184,15 +212,15 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized }) {
           <div className="mb-4 flex items-end justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">URL library</p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight text-ink">Your short links</h2>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-ink dark:text-white">Your short links</h2>
             </div>
             <p className="hidden text-xs text-slate-400 sm:block">Newest links appear first</p>
           </div>
 
           {listError ? (
-            <div className="rounded-3xl border border-rose-200 bg-rose-50 px-6 py-8 text-center">
-              <p className="text-sm font-semibold text-rose-800">{listError}</p>
-              <button type="button" onClick={() => { setLoading(true); setListError(''); loadUrls(page) }} className="mt-4 rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-bold text-rose-700 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-300">Try again</button>
+            <div className="rounded-3xl border border-rose-200 bg-rose-50 px-6 py-8 text-center dark:border-rose-500/30 dark:bg-rose-500/10">
+              <p className="text-sm font-semibold text-rose-800 dark:text-rose-200">{listError}</p>
+              <button type="button" onClick={() => { setLoading(true); setListError(''); loadUrls(page) }} className="mt-4 rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-bold text-rose-700 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-300 dark:border-rose-500/40 dark:bg-slate-900 dark:text-rose-200 dark:hover:bg-rose-500/20">Try again</button>
             </div>
           ) : (
             <UrlList
@@ -208,9 +236,9 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized }) {
 
           {!loading && !listError && (page > 0 || hasNext) && (
             <div className="mt-5 flex items-center justify-between gap-3">
-              <button type="button" onClick={() => goToPage(page - 1)} disabled={page === 0} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40">← Previous</button>
+              <button type="button" onClick={() => goToPage(page - 1)} disabled={page === 0} className="rounded-xl border border-slate-200 bg-white/70 px-4 py-2.5 text-sm font-semibold text-slate-600 backdrop-blur transition hover:border-slate-300 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white">← Previous</button>
               <span className="text-xs font-semibold text-slate-400">Page {page + 1}</span>
-              <button type="button" onClick={() => goToPage(page + 1)} disabled={!hasNext} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40">Next →</button>
+              <button type="button" onClick={() => goToPage(page + 1)} disabled={!hasNext} className="rounded-xl border border-slate-200 bg-white/70 px-4 py-2.5 text-sm font-semibold text-slate-600 backdrop-blur transition hover:border-slate-300 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white">Next →</button>
             </div>
           )}
         </section>

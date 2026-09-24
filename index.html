@@ -6,15 +6,29 @@
     <meta name="theme-color" content="#f8fafc" />
     <meta name="description" content="URLZS — simple, focused URL shortening." />
     <title>URLZS — Simple URL shortening</title>
+    <script>
+      (() => {
+        const savedTheme = localStorage.getItem('urlzs.theme')
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        const isDark = savedTheme === 'dark' || (savedTheme !== 'light' && prefersDark)
+        document.documentElement.classList.toggle('dark', isDark)
+        document.documentElement.style.colorScheme = isDark ? 'dark' : 'light'
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark ? '#07111f' : '#f8fafc')
+      })()
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             colors: {
               ink: '#172033',
               brand: '#2563eb',
-              surface: '#f8fafc'
+              surface: '#f8fafc',
+              night: '#07111f',
+              panel: '#0d1b2a',
+              line: '#1e3348'
             }
           }
         }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import ErrorBanner from './components/ErrorBanner'
+import ThemeToggle from './components/ThemeToggle'
 import DashboardPage from './pages/DashboardPage'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
@@ -142,15 +143,16 @@ function App() {
   } else {
     content = (
       <>
-        <header className="relative z-10 border-b border-slate-200/80 bg-white/70 backdrop-blur">
+        <header className="relative z-10 border-b border-slate-200/80 bg-white/70 backdrop-blur dark:border-slate-800/80 dark:bg-night/70">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
             <button type="button" onClick={() => navigate('/home')} className="flex items-center gap-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30" aria-label="URLZS home">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-ink text-sm font-black tracking-tight text-white">U</span>
-              <span className="text-lg font-extrabold tracking-tight text-ink">URLZS</span>
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-ink text-sm font-black tracking-tight text-white dark:bg-brand">U</span>
+              <span className="text-lg font-extrabold tracking-tight text-ink dark:text-white">URLZS</span>
             </button>
             <div className="flex items-center gap-2 sm:gap-3">
-              <button type="button" onClick={() => navigate('/login')} className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:text-ink focus:outline-none focus:ring-2 focus:ring-brand/30">Sign in</button>
-              <button type="button" onClick={() => navigate('/register')} className="rounded-xl bg-ink px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700 focus:outline-none focus:ring-4 focus:ring-ink/20">Get started</button>
+              <ThemeToggle />
+              <button type="button" onClick={() => navigate('/login')} className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:text-ink focus:outline-none focus:ring-2 focus:ring-brand/30 dark:text-slate-300 dark:hover:text-white">Sign in</button>
+              <button type="button" onClick={() => navigate('/register')} className="rounded-xl bg-ink px-4 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700 focus:outline-none focus:ring-4 focus:ring-ink/20 dark:bg-brand dark:hover:bg-blue-500">Get started</button>
             </div>
           </div>
         </header>
@@ -159,7 +161,7 @@ function App() {
     )
   }
 
-  return <div className="min-h-screen bg-surface text-ink">{content}</div>
+  return <div className="min-h-screen animated-bg text-ink dark:text-slate-100">{content}</div>
 }
 
 export default App

@@ -13,7 +13,7 @@ function UrlRow({ item, shortUrl, busy, onGet, onStatusChange, onDelete }) {
   }
 
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300 sm:p-5">
+    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300 dark:border-slate-700/80 dark:bg-slate-900/80 dark:shadow-black/20 dark:hover:border-slate-600 sm:p-5">
       <div className="flex flex-col gap-4">
         <div className="min-w-0">
           <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Original URL</p>
@@ -21,14 +21,14 @@ function UrlRow({ item, shortUrl, busy, onGet, onStatusChange, onDelete }) {
             href={item.originalUrl}
             target="_blank"
             rel="noreferrer"
-            className="block truncate text-sm font-medium text-ink hover:text-brand hover:underline"
+            className="block truncate text-sm font-medium text-ink hover:text-brand hover:underline dark:text-slate-200"
             title={item.originalUrl}
           >
             {item.originalUrl}
           </a>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
+        <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
           <div className="min-w-0 flex-1">
             <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Short URL</p>
             <a
@@ -43,18 +43,18 @@ function UrlRow({ item, shortUrl, busy, onGet, onStatusChange, onDelete }) {
           </div>
           <div className="text-right">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Clicks</p>
-            <p className="mt-1 text-lg font-bold text-ink">{item.clickCount}</p>
+            <p className="mt-1 text-lg font-bold text-ink dark:text-white">{item.clickCount}</p>
           </div>
           <StatusBadge status={item.status} />
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap justify-center sm:justify-start gap-2">
           <CopyButton value={shortUrl} />
           <a
             href={shortUrl}
             target="_blank"
             rel="noreferrer"
-            className="rounded-xl bg-ink px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-ink/30"
+            className="rounded-xl bg-ink px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-ink/30 dark:bg-brand dark:hover:bg-blue-500"
           >
             Open
           </a>
@@ -62,7 +62,7 @@ function UrlRow({ item, shortUrl, busy, onGet, onStatusChange, onDelete }) {
             type="button"
             onClick={() => onGet(item)}
             disabled={busy}
-            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand/40 hover:text-brand focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand/40 hover:text-brand focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
           >
             Refresh
           </button>
@@ -70,7 +70,7 @@ function UrlRow({ item, shortUrl, busy, onGet, onStatusChange, onDelete }) {
             type="button"
             onClick={handleStatusChange}
             disabled={busy}
-            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand/40 hover:text-brand focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-brand/40 hover:text-brand focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
           >
             {busy ? 'Saving...' : nextStatus === 'ACTIVE' ? 'Enable' : 'Disable'}
           </button>
@@ -78,7 +78,7 @@ function UrlRow({ item, shortUrl, busy, onGet, onStatusChange, onDelete }) {
             type="button"
             onClick={handleDelete}
             disabled={busy}
-            className="rounded-xl border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-500/40 dark:text-rose-300 dark:hover:bg-rose-500/10"
           >
             Remove
           </button>

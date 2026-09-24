@@ -2,12 +2,21 @@
 
 :root {
   font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #172033;
-  background: #f8fafc;
+  --page-bg: #f8fafc;
+  --page-text: #172033;
+  color: var(--page-text);
+  background: var(--page-bg);
+  color-scheme: light;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html.dark {
+  --page-bg: #07111f;
+  --page-text: #e5edf8;
+  color-scheme: dark;
 }
 
 * {
@@ -19,7 +28,12 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background: #f8fafc;
+  background: var(--page-bg);
+  color: var(--page-text);
+}
+
+body {
+  transition: background-color 220ms ease, color 220ms ease;
 }
 
 button,
@@ -30,4 +44,39 @@ input {
 button,
 a {
   -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes slideDown {
+  from { transform: translate(-50%, -100%); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animated-bg {
+  background: linear-gradient(-45deg, #f8fafc, #e0f2fe, #f1f5f9, #bae6fd);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+}
+
+.dark .animated-bg {
+  background: linear-gradient(-45deg, #07111f, #0b1d31, #050b16, #102a43);
+  background-size: 400% 400%;
+}
+
+::selection {
+  background: rgb(37 99 235 / 0.22);
+}
+
+html.dark ::selection {
+  background: rgb(96 165 250 / 0.3);
 }

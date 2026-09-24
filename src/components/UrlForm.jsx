@@ -35,10 +35,10 @@ function UrlForm({ onSubmit, submitting }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <form onSubmit={handleSubmit} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700/80 dark:bg-slate-900/80 dark:shadow-black/20 sm:p-6">
       <div className="mb-5">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand">Create a short link</p>
-        <h2 className="mt-2 text-xl font-bold tracking-tight text-ink sm:text-2xl">Turn a long URL into something shareable.</h2>
+        <h2 className="mt-2 text-xl font-bold tracking-tight text-ink dark:text-white sm:text-2xl">Turn a long URL into something shareable.</h2>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
@@ -53,7 +53,7 @@ function UrlForm({ onSubmit, submitting }) {
               if (error) setError('')
             }}
             placeholder="https://example.com/your-long-link"
-            className={`w-full rounded-2xl border bg-slate-50 px-4 py-3.5 text-sm text-ink outline-none transition placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-brand/10 ${error ? 'border-rose-300 focus:border-rose-400' : 'border-slate-200 focus:border-brand'}`}
+            className={`w-full rounded-2xl border bg-slate-50 px-4 py-3.5 text-sm text-ink outline-none transition placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-brand/10 dark:bg-slate-950/70 dark:text-white dark:placeholder:text-slate-500 dark:focus:bg-slate-900 ${error ? 'border-rose-300 focus:border-rose-400 dark:border-rose-500/60' : 'border-slate-200 focus:border-brand dark:border-slate-700'}`}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? 'url-form-error' : undefined}
             disabled={submitting}
