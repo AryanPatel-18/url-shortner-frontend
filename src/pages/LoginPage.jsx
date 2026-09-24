@@ -1,13 +1,15 @@
 import { useState } from 'react'
+import EmailVerificationModal from '../components/EmailVerificationModal'
 import ErrorBanner from '../components/ErrorBanner'
 import ThemeToggle from '../components/ThemeToggle'
-import { loginUser } from '../services/api'
+import { checkEmailVerification, loginUser, resendVerificationEmail } from '../services/api'
 
-function LoginPage({ onLogin, onRegister, onBack }) {
-  const [email, setEmail] = useState('')
+function LoginPage({ initialEmail = '', onLogin, onRegister, onBack }) {
+  const [email, setEmail] = useState(initialEmail)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [verificationOpen, setVerificationOpen] = useState(false)
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -22,14 +24,49 @@ function LoginPage({ onLogin, onRegister, onBack }) {
       const session = await loginUser({ email: email.trim(), password })
       onLogin(session)
     } catch (requestError) {
-      setError(requestError.message)
+      if (requestError?.status === 403) {
+        setVerificationOpen(true)
+        setError('')
+      } else {
+        setError(requestError.message)
+      }
     } finally {
       setSubmitting(false)
     }
   }
 
+  async function handleResendVerification() {
+    const response = await resendVerificationEmail(email.trim())
+    return response?.message || 'A new verification email has been sent. Check your inbox.'
+  }
+
+  async function handleCheckVerification() {
+    const response = await checkEmailVerification(email.trim())
+    return response?.verified === true
+  }
+
+  async function handleVerified() {
+    const session = await loginUser({ email: email.trim(), password })
+    onLogin(session)
+  }
+
+  function closeVerificationModal() {
+    setVerificationOpen(false)
+    setError('Email verification is required before you can sign in.')
+  }
+
   return (
     <main className="relative mx-auto flex min-h-[calc(100svh-73px)] w-full max-w-6xl items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <EmailVerificationModal
+        key={verificationOpen ? 'verification-open' : 'verification-closed'}
+        isOpen={verificationOpen}
+        email={email}
+        onResend={handleResendVerification}
+        onCheck={handleCheckVerification}
+        onVerified={handleVerified}
+        onCancel={closeVerificationModal}
+      />
+
       <div className="absolute right-4 top-4 sm:right-6 lg:right-8"><ThemeToggle /></div>
       <div className="grid w-full max-w-4xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_80px_-32px_rgba(23,32,51,0.28)] dark:border-slate-700/80 dark:bg-slate-900/90 dark:shadow-[0_24px_80px_-32px_rgba(0,0,0,0.65)] lg:grid-cols-[0.9fr_1.1fr]">
         <div className="hidden bg-ink p-10 text-white dark:bg-slate-950 lg:block">

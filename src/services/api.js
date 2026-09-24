@@ -89,6 +89,25 @@ export function loginUser(payload) {
   return request(`${API_PREFIX}/users/login`, { method: 'POST', body: payload })
 }
 
+export function checkEmailVerification(email) {
+  const query = new URLSearchParams({ email })
+  return request(`${API_PREFIX}/users/check-verification?${query}`)
+}
+
+export function resendVerificationEmail(email) {
+  return request(`${API_PREFIX}/users/resend-verification`, {
+    method: 'POST',
+    body: { email },
+  })
+}
+
+export function deleteAccount(token) {
+  return request(`${API_PREFIX}/users/me`, {
+    method: 'DELETE',
+    token,
+  })
+}
+
 export function createShortUrl(originalUrl, token) {
   return request(`${API_PREFIX}/urls`, {
     method: 'POST',

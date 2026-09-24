@@ -5,12 +5,13 @@ import Navbar from '../components/Navbar'
 import UrlForm from '../components/UrlForm'
 import UrlList from '../components/UrlList'
 import ConfirmModal from '../components/ConfirmModal'
+import DeleteAccountModal from '../components/DeleteAccountModal'
 import Toast from '../components/Toast'
-import { createShortUrl, deleteUrl, getShortUrl, getUrl, listUrls, updateUrlStatus } from '../services/api'
+import { createShortUrl, deleteAccount, deleteUrl, getShortUrl, getUrl, listUrls, updateUrlStatus } from '../services/api'
 
 const PAGE_SIZE = 20
 
-function DashboardPage({ auth, onLogout, onHome, onUnauthorized }) {
+function DashboardPage({ auth, onLogout, onHome, onUnauthorized, onAccountDeleted }) {
   const [urls, setUrls] = useState([])
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -23,6 +24,7 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized }) {
   const [hasNext, setHasNext] = useState(false)
 
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null })
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false)
 
   const handleError = useCallback((requestError, fallback = 'Something went wrong. Please try again.') => {
     if (requestError?.status === 401) {
@@ -164,6 +166,20 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized }) {
     setPage(nextPage)
   }
 
+  const closeDeleteAccount = useCallback(() => {
+    setDeleteAccountOpen(false)
+  }, [])
+
+  async function confirmAccountDeletion() {
+    try {
+      await deleteAccount(auth.token)
+      onAccountDeleted()
+    } catch (requestError) {
+      if (requestError?.status === 401) onUnauthorized()
+      throw requestError
+    }
+  }
+
   return (
     <div className="min-h-screen animated-bg">
       <Navbar email={auth.email} onHome={onHome} onLogout={onLogout} />
@@ -176,6 +192,14 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized }) {
         message={confirmDialog.message}
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog({ isOpen: false, title: '', message: '', onConfirm: null })}
+      />
+
+      <DeleteAccountModal
+        key={deleteAccountOpen ? 'delete-account-open' : 'delete-account-closed'}
+        isOpen={deleteAccountOpen}
+        email={auth.email}
+        onConfirm={confirmAccountDeletion}
+        onCancel={closeDeleteAccount}
       />
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
@@ -241,6 +265,15 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized }) {
               <button type="button" onClick={() => goToPage(page + 1)} disabled={!hasNext} className="rounded-xl border border-slate-200 bg-white/70 px-4 py-2.5 text-sm font-semibold text-slate-600 backdrop-blur transition hover:border-slate-300 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white">Next →</button>
             </div>
           )}
+
+          <section className="mt-12 rounded-3xl border border-rose-200/80 bg-rose-50/70 p-5 dark:border-rose-500/25 dark:bg-rose-500/5 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-6">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-rose-700 dark:text-rose-300">Danger zone</p>
+              <h2 className="mt-2 text-lg font-black tracking-tight text-ink dark:text-white">Delete your account</h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">Permanently delete your account and all of your shortened URLs. This cannot be undone.</p>
+            </div>
+            <button type="button" onClick={() => setDeleteAccountOpen(true)} className="mt-5 w-full shrink-0 rounded-xl border border-rose-300 bg-white px-4 py-2.5 text-sm font-bold text-rose-700 transition hover:bg-rose-100 focus:outline-none focus:ring-4 focus:ring-rose-500/15 dark:border-rose-500/40 dark:bg-slate-900/70 dark:text-rose-300 dark:hover:bg-rose-500/15 sm:mt-0 sm:w-auto">Delete account</button>
+          </section>
         </section>
       </main>
     </div>

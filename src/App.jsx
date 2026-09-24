@@ -9,6 +9,20 @@ import RegisterPage from './pages/RegisterPage'
 const SESSION_KEY = 'urlzs.session'
 const ROUTES = new Set(['/', '/home', '/login', '/register', '/dashboard'])
 
+function readLoginRedirect() {
+  const params = new URLSearchParams(window.location.search)
+
+  if (params.get('verified') === 'true') {
+    return {
+      kind: 'success',
+      message: 'Your email has been verified. You can now sign in.',
+    }
+  }
+
+  const error = params.get('error')
+  return error ? { kind: 'error', message: error } : null
+}
+
 function readSession() {
   try {
     const stored = localStorage.getItem(SESSION_KEY)
@@ -43,10 +57,12 @@ function currentPath() {
 
 function App() {
   const initialSession = readSession()
+  const initialRedirect = currentPath() === '/login' ? readLoginRedirect() : null
   const [auth, setAuth] = useState(initialSession)
   const [route, setRoute] = useState(currentPath)
-  const [flash, setFlash] = useState('')
-  const [flashKind, setFlashKind] = useState('error')
+  const [flash, setFlash] = useState(initialRedirect?.message || '')
+  const [flashKind, setFlashKind] = useState(initialRedirect?.kind || 'error')
+  const [emailHint, setEmailHint] = useState('')
 
   useEffect(() => {
     function handlePopState() {
@@ -84,6 +100,7 @@ function App() {
   function handleLogin(session) {
     const savedSession = saveSession(session)
     setAuth(savedSession)
+    setEmailHint('')
     setFlash('')
     setFlashKind('error')
     navigate('/dashboard', { replace: true })
@@ -92,6 +109,7 @@ function App() {
   function handleLogout() {
     clearSession()
     setAuth(null)
+    setEmailHint('')
     setFlash('')
     setFlashKind('error')
     navigate('/login', { replace: true })
@@ -106,9 +124,19 @@ function App() {
   }
 
   function handleRegistration(email) {
+    setEmailHint(email)
     navigate('/login', { replace: true })
     setFlashKind('success')
-    setFlash(`Account created for ${email}. Sign in to continue.`)
+    setFlash(`Account created for ${email}. Check your inbox and verify your email before signing in.`)
+  }
+
+  function handleAccountDeleted() {
+    clearSession()
+    setAuth(null)
+    setEmailHint('')
+    navigate('/login', { replace: true })
+    setFlashKind('success')
+    setFlash('Your account and shortened URLs were permanently deleted.')
   }
 
   let content
@@ -120,6 +148,7 @@ function App() {
         onLogout={handleLogout}
         onHome={() => navigate('/dashboard')}
         onUnauthorized={handleUnauthorized}
+        onAccountDeleted={handleAccountDeleted}
       />
     )
   } else if (resolvedRoute === '/login') {
@@ -128,7 +157,7 @@ function App() {
         <div className="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6 lg:px-8">
           <ErrorBanner message={flash} variant={flashKind} onDismiss={() => setFlash('')} />
         </div>
-        <LoginPage onLogin={handleLogin} onRegister={() => navigate('/register')} onBack={() => navigate('/home')} />
+        <LoginPage initialEmail={emailHint} onLogin={handleLogin} onRegister={() => navigate('/register')} onBack={() => navigate('/home')} />
       </>
     )
   } else if (resolvedRoute === '/register') {
