@@ -141,6 +141,12 @@ export function deleteUrl(urlId, token) {
   })
 }
 
+export const PUBLIC_URL = import.meta.env.VITE_PUBLIC_URL || window.location.origin.replace(/\/+$/, '')
+
+export function resolveShortCode(shortCode) {
+  return request(`${API_PREFIX}/redirect/${encodeURIComponent(shortCode)}`)
+}
+
 export function getShortUrl(shortCode) {
-  return `${API_BASE_URL}/${encodeURIComponent(shortCode)}`
+  return `${PUBLIC_URL}/${encodeURIComponent(shortCode)}`
 }

@@ -5,9 +5,14 @@ import DashboardPage from './pages/DashboardPage'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import RedirectPage from './pages/RedirectPage'
 
 const SESSION_KEY = 'urlzs.session'
 const ROUTES = new Set(['/', '/home', '/login', '/register', '/dashboard'])
+
+function isShortCodePath(path) {
+  return /^\/[a-zA-Z0-9_-]+$/.test(path)
+}
 
 function readLoginRedirect() {
   const params = new URLSearchParams(window.location.search)
@@ -52,7 +57,10 @@ function clearSession() {
 
 function currentPath() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/'
-  return ROUTES.has(path) ? path : '/'
+  if (ROUTES.has(path) || isShortCodePath(path)) {
+    return path
+  }
+  return '/'
 }
 
 function App() {
@@ -73,13 +81,17 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  const resolvedRoute = route === '/' || !ROUTES.has(route)
-    ? (auth ? '/dashboard' : '/login')
-    : !auth && route === '/dashboard'
-      ? '/login'
-      : auth && (route === '/login' || route === '/register')
-        ? '/dashboard'
-        : route
+  const isShortCode = !ROUTES.has(route) && isShortCodePath(route)
+
+  const resolvedRoute = isShortCode 
+    ? route
+    : route === '/' || !ROUTES.has(route)
+      ? (auth ? '/dashboard' : '/login')
+      : !auth && route === '/dashboard'
+        ? '/login'
+        : auth && (route === '/login' || route === '/register')
+          ? '/dashboard'
+          : route
 
   useEffect(() => {
     if (resolvedRoute !== route) {
@@ -90,7 +102,7 @@ function App() {
   }, [resolvedRoute, route])
 
   function navigate(path, { replace = false } = {}) {
-    const nextPath = ROUTES.has(path) ? path : '/'
+    const nextPath = ROUTES.has(path) || isShortCodePath(path) ? path : '/'
     window.history[replace ? 'replaceState' : 'pushState']({}, '', nextPath)
     setRoute(nextPath)
     setFlash('')
@@ -141,7 +153,9 @@ function App() {
 
   let content
 
-  if (auth && resolvedRoute === '/dashboard') {
+  if (isShortCode) {
+    content = <RedirectPage shortCode={resolvedRoute.slice(1)} />
+  } else if (auth && resolvedRoute === '/dashboard') {
     content = (
       <DashboardPage
         auth={auth}
