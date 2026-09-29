@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function EmailVerificationModal({ isOpen, email, onResend, onCheck, onVerified, onCancel }) {
+function EmailVerificationModal({ isOpen, email, onResend, onCheck, onVerified, onCancel, verifiedMessage = 'Email verified. Signing you in...', cancelLabel = 'Back to sign in' }) {
   const [resending, setResending] = useState(false)
   const [checking, setChecking] = useState(false)
   const [message, setMessage] = useState('Verify your email address before continuing to your dashboard.')
@@ -33,7 +33,7 @@ function EmailVerificationModal({ isOpen, email, onResend, onCheck, onVerified, 
         return
       }
 
-      setMessage('Email verified. Signing you in...')
+      setMessage(verifiedMessage)
       await onVerified()
     } catch (requestError) {
       setError(requestError?.message || 'Verification could not be checked. Please try again.')
@@ -78,7 +78,7 @@ function EmailVerificationModal({ isOpen, email, onResend, onCheck, onVerified, 
             {checking ? 'Checking verification...' : 'I have verified my email'}
           </button>
           <button type="button" onClick={onCancel} disabled={resending || checking} className="w-full rounded-xl px-4 py-2 text-sm font-semibold text-slate-500 transition hover:text-ink focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:text-white">
-            Back to sign in
+            {cancelLabel}
           </button>
         </div>
       </div>

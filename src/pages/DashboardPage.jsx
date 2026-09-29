@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import CopyButton from '../components/CopyButton'
+import EmailVerificationModal from '../components/EmailVerificationModal'
 import ErrorBanner from '../components/ErrorBanner'
 import Navbar from '../components/Navbar'
 import UrlForm from '../components/UrlForm'
@@ -7,21 +8,23 @@ import UrlList from '../components/UrlList'
 import ConfirmModal from '../components/ConfirmModal'
 import DeleteAccountModal from '../components/DeleteAccountModal'
 import Toast from '../components/Toast'
-import { createShortUrl, deleteAccount, deleteUrl, getShortUrl, getUrl, listUrls, updateUrlStatus } from '../services/api'
+import { checkEmailVerification, createShortUrl, deleteAccount, deleteUrl, getShortUrl, getUrl, listUrls, resendVerificationEmail, updateUrlStatus } from '../services/api'
 
 const PAGE_SIZE = 20
 
-function DashboardPage({ auth, onLogout, onHome, onUnauthorized, onAccountDeleted }) {
+function DashboardPage({ auth, initialNotice = '', onLogout, onHome, onUnauthorized, onAccountDeleted }) {
   const [urls, setUrls] = useState([])
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
   const [listError, setListError] = useState('')
   const [actionId, setActionId] = useState(null)
   const [creating, setCreating] = useState(false)
-  const [notice, setNotice] = useState('')
+  const [notice, setNotice] = useState(initialNotice)
   const [error, setError] = useState('')
   const [latestShortUrl, setLatestShortUrl] = useState('')
   const [hasNext, setHasNext] = useState(false)
+  const [emailVerified, setEmailVerified] = useState(null)
+  const [verificationOpen, setVerificationOpen] = useState(false)
 
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null })
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false)
@@ -61,6 +64,39 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized, onAccountDelete
   useEffect(() => {
     void loadUrls(page)
   }, [loadUrls, page])
+
+  useEffect(() => {
+    let active = true
+
+    checkEmailVerification(auth.email)
+      .then((response) => {
+        if (active) setEmailVerified(response?.verified === true)
+      })
+      .catch(() => {
+        // The dashboard remains usable if the verification status check is unavailable.
+      })
+
+    return () => {
+      active = false
+    }
+  }, [auth.email])
+
+  async function handleResendVerification() {
+    const response = await resendVerificationEmail(auth.email)
+    return response?.message || 'A new verification email has been sent. Check your inbox.'
+  }
+
+  async function handleCheckVerification() {
+    const response = await checkEmailVerification(auth.email)
+    const verified = response?.verified === true
+    if (verified) setEmailVerified(true)
+    return verified
+  }
+
+  function handleVerified() {
+    setVerificationOpen(false)
+    setNotice('Your email has been verified.')
+  }
 
   async function handleCreate(originalUrl) {
     setCreating(true)
@@ -186,6 +222,18 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized, onAccountDelete
 
       <Toast message={notice} onDismiss={() => setNotice('')} />
 
+      <EmailVerificationModal
+        key={verificationOpen ? 'dashboard-verification-open' : 'dashboard-verification-closed'}
+        isOpen={verificationOpen}
+        email={auth.email}
+        onResend={handleResendVerification}
+        onCheck={handleCheckVerification}
+        onVerified={handleVerified}
+        onCancel={() => setVerificationOpen(false)}
+        verifiedMessage="Email verified. You can continue using your dashboard."
+        cancelLabel="Not now"
+      />
+
       <ConfirmModal
         isOpen={confirmDialog.isOpen}
         title={confirmDialog.title}
@@ -216,6 +264,15 @@ function DashboardPage({ auth, onLogout, onHome, onUnauthorized, onAccountDelete
         </section>
 
         <div className="space-y-4">
+          {emailVerified === false && (
+            <div className="flex flex-col gap-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-4 text-sm text-blue-900 dark:border-blue-400/30 dark:bg-blue-500/10 dark:text-blue-100 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-bold">Verify your email</p>
+                <p className="mt-1 leading-6 text-blue-800/80 dark:text-blue-100/80">Check your inbox to verify {auth.email}. You can resend the email or check again here.</p>
+              </div>
+              <button type="button" onClick={() => setVerificationOpen(true)} className="shrink-0 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-brand/20">Verify email</button>
+            </div>
+          )}
           <UrlForm onSubmit={handleCreate} submitting={creating} />
           {latestShortUrl && (
             <div className="flex flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100 sm:flex-row sm:items-center sm:justify-between animate-[fadeIn_0.3s_ease-out]">

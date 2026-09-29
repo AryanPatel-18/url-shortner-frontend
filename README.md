@@ -8,6 +8,7 @@ The frontend is intentionally simple: React state, the native Fetch API, browser
 
 - URLZS landing page with responsive layout.
 - User registration and login.
+- Google sign-in and account creation through Google Identity Services.
 - JWT persistence across page refreshes.
 - Client-side logout and expired-session handling.
 - Create short URLs.
@@ -55,12 +56,14 @@ For local backend development, use:
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:8080
+VITE_GOOGLE_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
 ```
 
 For the deployed application, use:
 
 ```dotenv
 VITE_API_BASE_URL=https://api.urlzs.xyz
+VITE_GOOGLE_CLIENT_ID=your-google-web-client-id.apps.googleusercontent.com
 ```
 
 The API base URL is read by `src/services/api.js`. It is not hardcoded throughout the application. The backend API uses `/api/v1`, while public short links use the backend root format `https://api.urlzs.xyz/{shortCode}`.
@@ -118,6 +121,7 @@ Current API calls include:
 |---|---|---|
 | Register | `POST` | `/api/v1/users/register` |
 | Login | `POST` | `/api/v1/users/login` |
+| Google login | `POST` | `/api/v1/users/google` |
 | Create URL | `POST` | `/api/v1/urls` |
 | List URLs | `GET` | `/api/v1/urls?page=0&size=20` |
 | Get URL | `GET` | `/api/v1/urls/{urlId}` |
@@ -176,13 +180,13 @@ The app uses a lightweight browser History API router; no routing package is req
 
 | Path | Behavior |
 |---|---|
-| `/` | Redirects to `/dashboard` when logged in, otherwise `/login` |
+| `/` | Opens `/dashboard` when logged in, otherwise the public home page |
 | `/dashboard` | Protected dashboard; unauthenticated users are redirected to `/login` |
 | `/login` | Login page |
 | `/register` | Registration page |
 | `/home` | Public landing page |
 
-The root domain therefore opens the dashboard for an existing session and the login page for a logged-out visitor. Static hosting must rewrite application routes such as `/dashboard` and `/login` to `index.html` so direct browser refreshes continue to load the React app.
+The root domain therefore opens the dashboard for an existing session and the public home page for a logged-out visitor. Static hosting must rewrite application routes such as `/dashboard`, `/home`, and `/login` to `index.html` so direct browser refreshes continue to load the React app.
 
 ## Design approach
 

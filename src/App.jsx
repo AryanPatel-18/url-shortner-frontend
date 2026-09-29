@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react'
 import ErrorBanner from './components/ErrorBanner'
 import ThemeToggle from './components/ThemeToggle'
 import DashboardPage from './pages/DashboardPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import RedirectPage from './pages/RedirectPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 
 const SESSION_KEY = 'urlzs.session'
-const ROUTES = new Set(['/', '/home', '/login', '/register', '/dashboard'])
+const ROUTES = new Set(['/', '/home', '/login', '/register', '/forgot-password', '/reset-password', '/dashboard'])
 
 function isShortCodePath(path) {
   return /^\/[a-zA-Z0-9_-]+$/.test(path)
@@ -28,6 +30,10 @@ function readLoginRedirect() {
   return error ? { kind: 'error', message: error } : null
 }
 
+function readResetToken() {
+  return new URLSearchParams(window.location.search).get('token') || ''
+}
+
 function readSession() {
   try {
     const stored = localStorage.getItem(SESSION_KEY)
@@ -45,7 +51,7 @@ function saveSession(session) {
   const normalized = {
     token: session.token,
     email: session.email,
-    userId: session.userId,
+    userId: session.userId ?? session.id,
   }
   localStorage.setItem(SESSION_KEY, JSON.stringify(normalized))
   return normalized
@@ -71,6 +77,8 @@ function App() {
   const [flash, setFlash] = useState(initialRedirect?.message || '')
   const [flashKind, setFlashKind] = useState(initialRedirect?.kind || 'error')
   const [emailHint, setEmailHint] = useState('')
+  const [dashboardNotice, setDashboardNotice] = useState('')
+  const resetToken = route === '/reset-password' ? readResetToken() : ''
 
   useEffect(() => {
     function handlePopState() {
@@ -86,10 +94,10 @@ function App() {
   const resolvedRoute = isShortCode 
     ? route
     : route === '/' || !ROUTES.has(route)
-      ? (auth ? '/dashboard' : '/login')
+      ? (auth ? '/dashboard' : '/home')
       : !auth && route === '/dashboard'
         ? '/login'
-        : auth && (route === '/login' || route === '/register')
+        : auth && (route === '/home' || route === '/login' || route === '/register')
           ? '/dashboard'
           : route
 
@@ -109,10 +117,11 @@ function App() {
     setFlashKind('error')
   }
 
-  function handleLogin(session) {
+  function handleLogin(session, { notice = '' } = {}) {
     const savedSession = saveSession(session)
     setAuth(savedSession)
     setEmailHint('')
+    setDashboardNotice(notice)
     setFlash('')
     setFlashKind('error')
     navigate('/dashboard', { replace: true })
@@ -135,11 +144,15 @@ function App() {
     setFlash('Your session has expired. Please sign in again.')
   }
 
-  function handleRegistration(email) {
-    setEmailHint(email)
-    navigate('/login', { replace: true })
-    setFlashKind('success')
-    setFlash(`Account created for ${email}. Check your inbox and verify your email before signing in.`)
+  function handleRegistration(session) {
+    handleLogin(session, {
+      notice: 'Welcome! Please check your email to verify your account.',
+    })
+  }
+
+  function handleForgotPassword(email = '') {
+    setEmailHint(email.trim())
+    navigate('/forgot-password')
   }
 
   function handleAccountDeleted() {
@@ -159,6 +172,7 @@ function App() {
     content = (
       <DashboardPage
         auth={auth}
+        initialNotice={dashboardNotice}
         onLogout={handleLogout}
         onHome={() => navigate('/dashboard')}
         onUnauthorized={handleUnauthorized}
@@ -171,16 +185,20 @@ function App() {
         <div className="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6 lg:px-8">
           <ErrorBanner message={flash} variant={flashKind} onDismiss={() => setFlash('')} />
         </div>
-        <LoginPage initialEmail={emailHint} onLogin={handleLogin} onRegister={() => navigate('/register')} onBack={() => navigate('/home')} />
+        <LoginPage initialEmail={emailHint} onLogin={handleLogin} onRegister={() => navigate('/register')} onForgotPassword={handleForgotPassword} onBack={() => navigate('/home')} />
       </>
     )
+  } else if (resolvedRoute === '/forgot-password') {
+    content = <ForgotPasswordPage initialEmail={emailHint} onLogin={() => navigate('/login')} onRegister={() => navigate('/register')} onBack={() => navigate('/home')} />
+  } else if (resolvedRoute === '/reset-password') {
+    content = <ResetPasswordPage token={resetToken} onAuthenticated={handleLogin} onLogin={() => navigate('/login')} onBack={() => navigate('/home')} />
   } else if (resolvedRoute === '/register') {
     content = (
       <>
         <div className="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6 lg:px-8">
           <ErrorBanner message={flash} variant={flashKind} onDismiss={() => setFlash('')} />
         </div>
-        <RegisterPage onRegistered={handleRegistration} onLogin={() => navigate('/login')} onBack={() => navigate('/home')} />
+        <RegisterPage onRegistered={handleRegistration} onGoogleRegistered={handleLogin} onLogin={() => navigate('/login')} onBack={() => navigate('/home')} />
       </>
     )
   } else {

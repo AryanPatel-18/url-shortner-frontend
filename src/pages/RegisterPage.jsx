@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import ErrorBanner from '../components/ErrorBanner'
+import GoogleAuthButton from '../components/GoogleAuthButton'
 import ThemeToggle from '../components/ThemeToggle'
 import { registerUser } from '../services/api'
 
-function RegisterPage({ onRegistered, onLogin, onBack }) {
+function RegisterPage({ onRegistered, onGoogleRegistered, onLogin, onBack }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -24,8 +25,8 @@ function RegisterPage({ onRegistered, onLogin, onBack }) {
     setError('')
     setSubmitting(true)
     try {
-      await registerUser({ email: email.trim(), password })
-      onRegistered(email.trim())
+      const session = await registerUser({ email: email.trim(), password })
+      onRegistered(session)
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -65,6 +66,8 @@ function RegisterPage({ onRegistered, onLogin, onBack }) {
             </div>
             <button type="submit" disabled={submitting} className="w-full rounded-2xl bg-brand px-5 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-60">{submitting ? 'Creating account...' : 'Create account'}</button>
           </form>
+
+          <GoogleAuthButton onSuccess={onGoogleRegistered} onError={setError} />
 
           <p className="mt-7 text-center text-sm text-slate-500 dark:text-slate-400">Already registered? <button type="button" onClick={onLogin} className="font-bold text-brand hover:underline">Sign in</button></p>
         </div>

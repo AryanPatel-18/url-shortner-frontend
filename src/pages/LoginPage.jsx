@@ -1,10 +1,11 @@
 import { useState } from 'react'
+import GoogleAuthButton from '../components/GoogleAuthButton'
 import EmailVerificationModal from '../components/EmailVerificationModal'
 import ErrorBanner from '../components/ErrorBanner'
 import ThemeToggle from '../components/ThemeToggle'
 import { checkEmailVerification, loginUser, resendVerificationEmail } from '../services/api'
 
-function LoginPage({ initialEmail = '', onLogin, onRegister, onBack }) {
+function LoginPage({ initialEmail = '', onLogin, onRegister, onForgotPassword, onBack }) {
   const [email, setEmail] = useState(initialEmail)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -92,11 +93,16 @@ function LoginPage({ initialEmail = '', onLogin, onRegister, onBack }) {
               <input id="login-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-ink outline-none transition placeholder:text-slate-400 focus:border-brand focus:bg-white focus:ring-4 focus:ring-brand/10 dark:border-slate-700 dark:bg-slate-950/70 dark:text-white dark:placeholder:text-slate-500 dark:focus:bg-slate-900" placeholder="you@example.com" disabled={submitting} />
             </div>
             <div>
-              <label htmlFor="login-password" className="mb-2 block text-sm font-semibold text-ink dark:text-slate-200">Password</label>
+              <div className="mb-2 flex items-center justify-between gap-4">
+                <label htmlFor="login-password" className="block text-sm font-semibold text-ink dark:text-slate-200">Password</label>
+                <button type="button" onClick={() => onForgotPassword(email)} className="shrink-0 text-xs font-bold text-brand transition hover:text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-brand/30 focus:ring-offset-2 dark:hover:text-blue-300 dark:focus:ring-offset-slate-900">Forgot password?</button>
+              </div>
               <input id="login-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-ink outline-none transition placeholder:text-slate-400 focus:border-brand focus:bg-white focus:ring-4 focus:ring-brand/10 dark:border-slate-700 dark:bg-slate-950/70 dark:text-white dark:placeholder:text-slate-500 dark:focus:bg-slate-900" placeholder="Your password" disabled={submitting} />
             </div>
             <button type="submit" disabled={submitting} className="w-full rounded-2xl bg-brand px-5 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-brand/20 disabled:cursor-not-allowed disabled:opacity-60">{submitting ? 'Signing in...' : 'Sign in'}</button>
           </form>
+
+          <GoogleAuthButton onSuccess={onLogin} onError={setError} />
 
           <p className="mt-7 text-center text-sm text-slate-500 dark:text-slate-400">Need an account? <button type="button" onClick={onRegister} className="font-bold text-brand hover:underline">Create one</button></p>
         </div>

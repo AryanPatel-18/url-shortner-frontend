@@ -89,6 +89,27 @@ export function loginUser(payload) {
   return request(`${API_PREFIX}/users/login`, { method: 'POST', body: payload })
 }
 
+export function loginWithGoogle(idToken) {
+  return request(`${API_PREFIX}/users/google`, {
+    method: 'POST',
+    body: { idToken },
+  })
+}
+
+export function requestPasswordReset(email) {
+  return request(`${API_PREFIX}/users/forgot-password`, {
+    method: 'POST',
+    body: { email },
+  })
+}
+
+export function resetPassword(payload) {
+  return request(`${API_PREFIX}/users/reset-password`, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
 export function checkEmailVerification(email) {
   const query = new URLSearchParams({ email })
   return request(`${API_PREFIX}/users/check-verification?${query}`)
