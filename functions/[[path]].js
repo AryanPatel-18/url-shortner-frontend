@@ -87,13 +87,14 @@ export async function onRequest(context) {
     }
 
     if (!apiResponse.ok) {
-      return env.ASSETS.fetch(request);
+      const text = await apiResponse.text();
+      return new Response(`Edge Function Debug: Backend returned ${apiResponse.status}\nBody: ${text}`, { status: 500 });
     }
 
     const data = await apiResponse.json();
 
     if (!data?.originalUrl) {
-      return env.ASSETS.fetch(request);
+      return new Response(`Edge Function Debug: originalUrl missing from response\nData: ${JSON.stringify(data)}`, { status: 500 });
     }
 
     // Security: validate the URL
@@ -112,8 +113,8 @@ export async function onRequest(context) {
       headers: { 'Location': data.originalUrl },
     });
 
-  } catch {
-    // Network error talking to backend → fall through to SPA as fallback
-    return env.ASSETS.fetch(request);
+  } catch (err) {
+    // Network error talking to backend
+    return new Response(`Edge Function Debug: Fetch failed.\nError: ${err.message}`, { status: 500 });
   }
 }
