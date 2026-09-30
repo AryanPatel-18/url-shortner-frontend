@@ -68,7 +68,7 @@ function GoogleAuthButton({ onSuccess, onError }) {
         <span>or continue with</span>
         <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
       </div>
-      <div className={`relative mt-5 flex min-h-10 justify-center ${submitting ? 'opacity-60' : ''}`} ref={googleButtonRef} aria-label="Continue with Google" />
+      <div className={`relative mt-5 flex min-h-10 justify-center overflow-hidden rounded-lg ${submitting ? 'opacity-60' : ''}`} ref={googleButtonRef} aria-label="Continue with Google" />
       {submitting && <p className="mt-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">Signing in with Google...</p>}
     </div>
   )
