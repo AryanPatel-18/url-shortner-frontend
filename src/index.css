@@ -80,3 +80,12 @@ a {
 html.dark ::selection {
   background: rgb(96 165 250 / 0.3);
 }
+
+/* Crop Google Sign-In iframe white border in dark mode */
+.gsi-clip {
+  overflow: hidden;
+  border-radius: 0.5rem;
+}
+.gsi-clip > div {
+  margin: -2px;
+}
