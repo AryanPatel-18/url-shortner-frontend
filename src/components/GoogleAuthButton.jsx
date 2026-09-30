@@ -43,10 +43,10 @@ function GoogleAuthButton({ onSuccess, onError }) {
 
       googleButtonRef.current.innerHTML = ''
       window.google.accounts.id.renderButton(googleButtonRef.current, {
-        theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
+        theme: document.documentElement.classList.contains('dark') ? 'filled_blue' : 'outline',
         size: 'large',
         text: 'continue_with',
-        shape: 'pill',
+        shape: 'rectangular',
         width: 320,
       })
     }

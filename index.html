@@ -7,37 +7,30 @@
     <!-- Seamless Pre-boot Redirect Script -->
     <script>
       (async function() {
-        const path = window.location.pathname;
-        if (/^\/[a-zA-Z0-9_-]{1,20}$/.test(path)) {
-          // Hide the screen instantly so user sees nothing during the microsecond delay
-          document.documentElement.style.opacity = '0';
-          
-          try {
-            const apiBase = "https://api.urlzs.xyz";
-            const shortCode = path.slice(1);
-            const res = await fetch(`${apiBase}/api/v1/redirect/${encodeURIComponent(shortCode)}`, {
-              headers: { 'Accept': 'application/json' }
-            });
-            
-            if (res.ok) {
-              const data = await res.json();
-              if (data && data.originalUrl) {
-                // Validate security
-                const parsed = new URL(data.originalUrl);
-                if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-                  window.location.replace(data.originalUrl);
-                  return; // Stop execution, redirecting...
-                }
+        var KNOWN = ['/','home','login','register','forgot-password','reset-password','dashboard'];
+        var path = window.location.pathname.replace(/\/+$/, '') || '/';
+        // Skip known frontend routes
+        if (path === '/' || KNOWN.indexOf(path.slice(1)) !== -1) return;
+        // Only proceed for single-segment alphanumeric paths (short codes)
+        if (!/^\/[a-zA-Z0-9_-]{1,20}$/.test(path)) return;
+
+        document.documentElement.style.opacity = '0';
+        try {
+          var res = await fetch('https://api.urlzs.xyz/api/v1/redirect/' + encodeURIComponent(path.slice(1)), {
+            headers: { 'Accept': 'application/json' }
+          });
+          if (res.ok) {
+            var data = await res.json();
+            if (data && data.originalUrl) {
+              var u = new URL(data.originalUrl);
+              if (u.protocol === 'http:' || u.protocol === 'https:') {
+                window.location.replace(data.originalUrl);
+                return;
               }
             }
-          } catch (e) {
-            // Silently fail network errors and let React boot up to show a proper error screen
           }
-          
-          // If we reach here, the redirect failed (404, bad link, etc). 
-          // Unhide the screen and let React handle the nice error UI!
-          document.documentElement.style.opacity = '';
-        }
+        } catch (e) {}
+        document.documentElement.style.opacity = '';
       })();
     </script>
 
